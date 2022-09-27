@@ -22,7 +22,6 @@ public:
 			.hInstance{ hinstance },
 			.hIcon{ LoadIconW(hinstance, MAKEINTRESOURCEW(IDI_ICON)) },
 			.lpszClassName{ CLASS_NAME },
-			.hIconSm{ LoadIconW(hinstance, MAKEINTRESOURCEW(IDI_ICON)) },
 		};
 		RegisterClassExW(&wndclassexw);
 
