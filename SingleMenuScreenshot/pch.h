@@ -1,12 +1,9 @@
 #pragma once
 
-//standard includes
+#define _CRT_SECURE_NO_WARNINGS
 
-#include <fstream>
-#include <filesystem>
-#include <random>
-
-//system includes
+//system
+//
 
 #include "targetver.h"
 
@@ -18,4 +15,13 @@
 #include <Shlobj.h>
 #include <gdiplus.h>
 #include <dwmapi.h>
-#include <winrt/base.h>
+#include <wrl/client.h>
+
+//
+
+//std
+#include <fstream>
+#include <filesystem>
+#include <random>
+#include <cassert>
+#include <memory>
