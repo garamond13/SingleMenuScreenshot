@@ -11,7 +11,7 @@ void Window::create(HINSTANCE hinstance)
 {
 	const WNDCLASSEXW wndclassexw{
 		.cbSize{ sizeof(WNDCLASSEXW) },
-		.lpfnWndProc{ wnd_proc },
+		.lpfnWndProc{ wndproc },
 		.hInstance{ hinstance },
 		.hIcon{ LoadIconW(hinstance, MAKEINTRESOURCEW(IDI_ICON)) },
 		.lpszClassName{ L"smss" },
@@ -25,40 +25,73 @@ void Window::create(HINSTANCE hinstance)
 	register_hotkeys();
 }
 
-LRESULT Window::wnd_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+/* static */ LRESULT Window::wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	//equivalent to the this pointer of the Window class
-	static constinit Window* window;
+	// Equivalent to the this pointer of the Window class.
+	static Window* window;
 
 	switch (message) {
-	[[unlikely]] case WM_NCCREATE:
-		window = reinterpret_cast<Window*>(reinterpret_cast<CREATESTRUCT*>(lparam)->lpCreateParams);
-		window->hwnd = hwnd;
-		SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
-		return DefWindowProcW(hwnd, message, wparam, lparam);
-
-	//it shouldnt recive WM_HOTKEY on non registered hot keys
-	case WM_HOTKEY:
-		window->wm_hotkey(wparam);
-		break;
-
-	case SMSS_WM_APP_NOTIFYCALLBACK:
-		if (LOWORD(lparam) == WM_CONTEXTMENU) {
-			const POINT point{ LOWORD(wparam), HIWORD(wparam) };
-			window->show_menu(point);
+		[[unlikely]] case WM_NCCREATE:
+			window = reinterpret_cast<Window*>(reinterpret_cast<CREATESTRUCT*>(lparam)->lpCreateParams);
+			window->hwnd = hwnd;
+			SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
 			break;
+
+		// It shouldnt recive WM_HOTKEY on non registered hot keys.
+		case WM_HOTKEY: {
+			Screenshot screenshot;
+			switch (wparam) {
+				case SMSS_HOTKEY_PRINTSCREEN:
+					screenshot.fullscreen();
+					break;
+				case SMSS_HOTKEY_CTRL_PRINTSCREEN:
+					screenshot.window();
+					break;
+				case SMSS_HOTKEY_ALT_PRINTSCREEN:
+					screenshot.client();
+					break;
+			}
+			return 0;
 		}
-	case WM_COMMAND:
-		window->wm_command(wparam);
-		break;
-	case WM_DESTROY:
-		window->destroy_tray_icon();
-		PostQuitMessage(0);
-		break;
-	default:
-		return DefWindowProcW(hwnd, message, wparam, lparam);
+
+		case SMSS_WM_APP_NOTIFYCALLBACK:
+			if (LOWORD(lparam) == WM_CONTEXTMENU) {
+				const POINT point{ LOWORD(wparam), HIWORD(wparam) };
+				window->show_menu(point);
+			}
+			return 0;
+		case WM_COMMAND:
+			switch (LOWORD(wparam)) {
+				case ID_AUTOSTART:
+					g_config.set_autostart();
+					break;
+				case ID_FOLDER:
+					g_config.set_directory();
+					break;
+				case ID_FORMAT_PNG:
+					g_config.set_format(SMSS_FORMAT_PNG);
+					break;
+				case ID_FORMAT_BMP:
+					g_config.set_format(SMSS_FORMAT_BMP);
+					break;
+				case ID_EXIT:
+					DestroyWindow(hwnd);
+			}
+			return 0;
+		case WM_DESTROY: {
+
+			// Destroy tray icon.
+			NOTIFYICONDATAW notifyicondata{
+				.hWnd{ hwnd },
+				.uID{ IDI_ICON }
+			};
+			smss_assert(Shell_NotifyIconW(NIM_DELETE, &notifyicondata), != 0);
+			
+			PostQuitMessage(0);
+			return 0;
+		}
 	}
-	return 0;
+	return DefWindowProcW(hwnd, message, wparam, lparam);
 }
 
 void Window::create_tray_icon()
@@ -90,44 +123,6 @@ void Window::register_hotkeys() const noexcept
 	smss_assert(RegisterHotKey(hwnd, SMSS_HOTKEY_CTRL_PRINTSCREEN, MOD_CONTROL | MOD_NOREPEAT, VK_SNAPSHOT), != 0);
 }
 
-void Window::wm_hotkey(WPARAM wparam) const
-{
-	Screenshot screenshot;
-	switch (wparam) {
-	case SMSS_HOTKEY_PRINTSCREEN: {
-		screenshot.fullscreen();
-		break;
-	}
-	case SMSS_HOTKEY_CTRL_PRINTSCREEN: {
-		screenshot.window();
-		break;
-	}
-	case SMSS_HOTKEY_ALT_PRINTSCREEN:
-		screenshot.client();
-		break;
-	}
-}
-
-void Window::wm_command(WPARAM wparam) const
-{
-	switch (LOWORD(wparam)) {
-	case ID_AUTOSTART:
-		g_config.set_autostart();
-		break;
-	case ID_FOLDER:
-		g_config.set_directory();
-		break;
-	case ID_FORMAT_PNG:
-		g_config.set_format(SMSS_FORMAT_PNG);
-		break;
-	case ID_FORMAT_BMP:
-		g_config.set_format(SMSS_FORMAT_BMP);
-		break;
-	case ID_EXIT:
-		DestroyWindow(hwnd);
-	}
-}
-
 void Window::show_menu(const POINT& point) const noexcept
 {
 	const auto hmenu{ LoadMenuW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDR_MENU)) };
@@ -157,13 +152,4 @@ void Window::set_check_menu_items(HMENU hmenu) const noexcept
 		CheckMenuItem(hmenu, ID_FORMAT_BMP, MF_CHECKED);
 	if (g_config.autostart)
 		CheckMenuItem(hmenu, ID_AUTOSTART, MF_CHECKED);
-}
-
-void Window::destroy_tray_icon() const noexcept
-{
-	NOTIFYICONDATAW notifyicondata{
-		.hWnd{ hwnd },
-		.uID{ IDI_ICON }
-	};
-	smss_assert(Shell_NotifyIconW(NIM_DELETE, &notifyicondata), != 0);
 }
