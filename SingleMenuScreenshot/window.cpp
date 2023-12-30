@@ -28,6 +28,17 @@ Window::Window(HINSTANCE hinstance)
 	register_hotkeys();
 }
 
+int Window::message_loop()
+{
+	MSG msg;
+	while (GetMessageW(&msg, nullptr, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessageW(&msg);
+	}
+	return static_cast<int>(msg.wParam);
+}
+
 /* static */ LRESULT Window::wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	// Equivalent to the this pointer of the Window class.

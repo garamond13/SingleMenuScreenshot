@@ -14,6 +14,7 @@ class Window
 {
 public:
 	Window(HINSTANCE hinstance);
+	int message_loop();
 private:
 	static LRESULT CALLBACK wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 	void create_tray_icon();

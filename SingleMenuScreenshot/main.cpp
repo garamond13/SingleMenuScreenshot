@@ -11,12 +11,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, [[maybe_unused]] _In_opt_ HINSTA
     g_config.read();
     auto window{ std::make_unique<Window>(hInstance) };
 
-    //message loop
-    MSG msg;
-    while (GetMessageW(&msg, nullptr, 0u, 0u))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-    return static_cast<int>(msg.wParam);
+    return window->message_loop();
 }
