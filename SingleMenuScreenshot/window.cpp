@@ -5,20 +5,23 @@
 #include "helpers.h"
 #include "version.h"
 
-constexpr auto SMSS_WM_APP_NOTIFYCALLBACK{ WM_USER + 0 };
+namespace
+{
+	constexpr auto SMSS_WM_APP_NOTIFYCALLBACK{ WM_USER + 0 };
+}
 
-void Window::create(HINSTANCE hinstance)
+Window::Window(HINSTANCE hinstance)
 {
 	const WNDCLASSEXW wndclassexw{
 		.cbSize{ sizeof(WNDCLASSEXW) },
 		.lpfnWndProc{ wndproc },
 		.hInstance{ hinstance },
 		.hIcon{ LoadIconW(hinstance, MAKEINTRESOURCEW(IDI_ICON)) },
-		.lpszClassName{ L"smss" },
+		.lpszClassName{ L"SMSS" },
 	};
 	smss_assert(RegisterClassExW(&wndclassexw), != 0);
 
-	//create message only window
+	// Create message only window.
 	smss_assert(CreateWindowExW(0, wndclassexw.lpszClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, hinstance, this), != nullptr);
 
 	create_tray_icon();

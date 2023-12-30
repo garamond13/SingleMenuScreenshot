@@ -13,7 +13,7 @@ enum SMSS_HOTKEY_
 class Window
 {
 public:
-	void create(HINSTANCE hinstance);
+	Window(HINSTANCE hinstance);
 private:
 	static LRESULT CALLBACK wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 	void create_tray_icon();
