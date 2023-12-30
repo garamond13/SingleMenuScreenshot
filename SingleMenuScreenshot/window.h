@@ -20,6 +20,5 @@ private:
 	void create_tray_icon();
 	void register_hotkeys() const noexcept;
 	void show_menu(const POINT& point) const noexcept;
-	void set_check_menu_items(HMENU hmenu) const noexcept;
 	HWND hwnd;
 };

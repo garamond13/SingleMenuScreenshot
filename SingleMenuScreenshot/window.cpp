@@ -120,16 +120,16 @@ void Window::create_tray_icon()
 		.uVersion{ NOTIFYICON_VERSION_4 },
 	};
 
-	//initialize .szTip
-	std::wstring(&w)(int) { std::to_wstring };
-	const std::wstring tip{ L"Single Menu Screenshot " + w(SMSS_VERSION_NUMBER_MAJOR) + L"." + w(SMSS_VERSION_NUMBER_MINOR) + L"." + w(SMSS_VERSION_NUMBER_PATCH) };
+	// Initialize NOTIFYICONDATAW::szTip
+	auto(&w)(int) { std::to_wstring };
+	const auto tip{ L"Single Menu Screenshot " + w(SMSS_VERSION_NUMBER_MAJOR) + L"." + w(SMSS_VERSION_NUMBER_MINOR) + L"." + w(SMSS_VERSION_NUMBER_PATCH) };
 	std::wcscpy(notifyicondata.szTip, tip.c_str());
 
 	smss_assert(Shell_NotifyIconW(NIM_ADD, &notifyicondata), != 0);
 	smss_assert(Shell_NotifyIconW(NIM_SETVERSION, &notifyicondata), != 0);
 }
 
-//hotkeys have to be set with RegisterHotKey()
+// Hotkeys have to be set with RegisterHotKey().
 void Window::register_hotkeys() const noexcept
 {
 	smss_assert(RegisterHotKey(hwnd, SMSS_HOTKEY_PRINTSCREEN, MOD_NOREPEAT, VK_SNAPSHOT), != 0);
@@ -141,12 +141,19 @@ void Window::show_menu(const POINT& point) const noexcept
 {
 	const auto hmenu{ LoadMenuW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDR_MENU)) };
 	const auto sub_menu{ GetSubMenu(hmenu, 0) };
-	set_check_menu_items(sub_menu);
 
-	//window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away
+	// Set check marks on menu items.
+	if (g_config.format == SMSS_FORMAT_PNG)
+		CheckMenuItem(sub_menu, ID_FORMAT_PNG, MF_CHECKED);
+	if (g_config.format == SMSS_FORMAT_BMP)
+		CheckMenuItem(sub_menu, ID_FORMAT_BMP, MF_CHECKED);
+	if (g_config.autostart)
+		CheckMenuItem(sub_menu, ID_AUTOSTART, MF_CHECKED);
+
+	// Window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away.
 	SetForegroundWindow(hwnd);
 
-	//respect menu drop alignment
+	// Respect menu drop alignment.
 	auto flags{ TPM_RIGHTBUTTON };
 	if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0)
 		flags |= TPM_RIGHTALIGN;
@@ -155,15 +162,4 @@ void Window::show_menu(const POINT& point) const noexcept
 
 	TrackPopupMenuEx(sub_menu, flags, point.x, point.y, hwnd, nullptr);
 	smss_assert(DestroyMenu(hmenu), != 0);
-}
-
-//sets check marks on menu items
-void Window::set_check_menu_items(HMENU hmenu) const noexcept
-{ 
-	if (g_config.format == SMSS_FORMAT_PNG)
-		CheckMenuItem(hmenu, ID_FORMAT_PNG, MF_CHECKED);
-	if (g_config.format == SMSS_FORMAT_BMP)
-		CheckMenuItem(hmenu, ID_FORMAT_BMP, MF_CHECKED);
-	if (g_config.autostart)
-		CheckMenuItem(hmenu, ID_AUTOSTART, MF_CHECKED);
 }
