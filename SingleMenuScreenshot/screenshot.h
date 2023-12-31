@@ -18,6 +18,6 @@ public:
 private:
 	void save(HBITMAP compatible_bitmap);
 	std::wstring get_random_wstring(size_t lenght);
-	std::filesystem::path path{};
-	const wchar_t* format{};
+	std::filesystem::path path;
+	std::wstring format;
 };

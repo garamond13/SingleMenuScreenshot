@@ -6,15 +6,15 @@
 Screenshot::Screenshot()
 {
 	path = g_config.directory.val;
-	const std::chrono::zoned_time time(std::chrono::current_zone(), std::chrono::system_clock::now());
-	path /= std::format(L"{:%Y-%m-%d %H_%M }", time) + get_random_wstring(5);
-	if (g_config.format.val == SMSS_FORMAT_PNG) {
-		path.replace_extension(L".png");
-		format = L"image/png";
-	}
-	else if (g_config.format.val == SMSS_FORMAT_BMP) {
-		path.replace_extension(L".bmp");
-		format = L"image/bmp";
+	path /= std::format(L"{:%Y-%m-%d %H_%M }", std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::system_clock::now() }) + get_random_wstring(5);
+	switch (g_config.format.val) {
+		case SMSS_FORMAT_PNG:
+			path.replace_extension(L".png");
+			format = L"image/png";
+			break;
+		case SMSS_FORMAT_BMP:
+			path.replace_extension(L".bmp");
+			format = L"image/bmp";
 	}
 }
 
@@ -108,7 +108,7 @@ void Screenshot::save(HBITMAP compatible_bitmap)
 		auto image_codec_info{ std::make_unique_for_overwrite<Gdiplus::ImageCodecInfo[]>(size) };
 		GetImageEncoders(count, size, image_codec_info.get());
 		for (UINT i{}; i < count; ++i)
-			if (std::wcscmp(image_codec_info[i].MimeType, format) == 0) {
+			if (std::wcscmp(image_codec_info[i].MimeType, format.c_str()) == 0) {
 				smss_assert(bitmap.Save(path.c_str(), &image_codec_info[i].Clsid, nullptr), == Gdiplus::Status::Ok);
 				break;
 			}
