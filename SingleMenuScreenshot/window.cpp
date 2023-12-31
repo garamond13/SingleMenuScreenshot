@@ -53,17 +53,22 @@ int Window::message_loop()
 
 		// It shouldnt recive WM_HOTKEY on non registered hot keys.
 		case WM_HOTKEY: {
-			Screenshot screenshot;
 			switch (wparam) {
-				case SMSS_HOTKEY_PRINTSCREEN:
+				case SMSS_HOTKEY_PRINTSCREEN: {
+					Screenshot screenshot;
 					screenshot.fullscreen();
 					break;
-				case SMSS_HOTKEY_CTRL_PRINTSCREEN:
+					}
+				case SMSS_HOTKEY_CTRL_PRINTSCREEN: {
+					Screenshot screenshot;
 					screenshot.window();
 					break;
-				case SMSS_HOTKEY_ALT_PRINTSCREEN:
+					}
+				case SMSS_HOTKEY_ALT_PRINTSCREEN: {
+					Screenshot screenshot;
 					screenshot.client();
 					break;
+					}
 			}
 			return 0;
 		}

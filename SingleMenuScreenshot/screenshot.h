@@ -18,7 +18,6 @@ public:
 
 private:
 	void save();
-	CLSID get_encoder();
 	std::wstring get_random_wstring(size_t lenght);
 	std::filesystem::path path{};
 	const wchar_t* format{};
