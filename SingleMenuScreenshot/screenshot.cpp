@@ -18,12 +18,6 @@ Screenshot::Screenshot()
 	}
 }
 
-Screenshot::~Screenshot()
-{
-	DeleteDC(compatible_hdc);
-	DeleteObject(compatible_bitmap);
-}
-
 // Dpi functions, the minimum supported windows version is win 10 1607.
 void Screenshot::fullscreen()
 {
@@ -36,15 +30,19 @@ void Screenshot::fullscreen()
 	const auto height{ GetSystemMetricsForDpi(SM_CYVIRTUALSCREEN, dpi) };
 
 	// Create dc that we can draw to.
-	compatible_hdc = CreateCompatibleDC(hdc);
-	compatible_bitmap = CreateCompatibleBitmap(hdc, width, height);
+	auto compatible_hdc{ CreateCompatibleDC(hdc) };
+	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, width, height) };
 
 	// Capture the image.
 	SelectObject(compatible_hdc, compatible_bitmap);
 	smss_assert(BitBlt(compatible_hdc, 0, 0, width, height, hdc, GetSystemMetricsForDpi(SM_XVIRTUALSCREEN, dpi), GetSystemMetricsForDpi(SM_YVIRTUALSCREEN, dpi), SRCCOPY | CAPTUREBLT), != 0);
 
 	smss_assert(ReleaseDC(nullptr, hdc), == 1);
-	save();
+	save(compatible_bitmap);
+
+	// Free resources.
+	DeleteDC(compatible_hdc);
+	DeleteObject(compatible_bitmap);
 }
 
 void Screenshot::window()
@@ -58,15 +56,19 @@ void Screenshot::window()
 	smss_assert(DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect, sizeof(RECT)), == S_OK);
 
 	// Create dc that we can draw to.
-	compatible_hdc = CreateCompatibleDC(hdc);
-	compatible_bitmap = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top);
+	auto compatible_hdc{ CreateCompatibleDC(hdc) };
+	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top) };
 
 	// Capture the image.
 	SelectObject(compatible_hdc, compatible_bitmap);
 	smss_assert(BitBlt(compatible_hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT), != 0);
 
 	smss_assert(ReleaseDC(nullptr, hdc), == 1);
-	save();
+	save(compatible_bitmap);
+
+	// Free resources.
+	DeleteDC(compatible_hdc);
+	DeleteObject(compatible_bitmap);
 }
 
 void Screenshot::client()
@@ -77,18 +79,22 @@ void Screenshot::client()
 	smss_assert(GetClientRect(hwnd, &rect), != 0);
 
 	// Create dc that we can draw to.
-	compatible_hdc = CreateCompatibleDC(hdc);
-	compatible_bitmap = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top);
+	auto compatible_hdc{ CreateCompatibleDC(hdc) };
+	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top) };
 
 	// Capture the image.
 	SelectObject(compatible_hdc, compatible_bitmap);
 	smss_assert(BitBlt(compatible_hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hdc, 0, 0, SRCCOPY), != 0);
 
 	smss_assert(ReleaseDC(hwnd, hdc), == 1);
-	save();
+	save(compatible_bitmap);
+
+	// Free resources.
+	DeleteDC(compatible_hdc);
+	DeleteObject(compatible_bitmap);
 }
 
-void Screenshot::save()
+void Screenshot::save(HBITMAP compatible_bitmap)
 {
 	ULONG_PTR gdiplus_token;
 	Gdiplus::GdiplusStartupInput gdiplus_startup_input;

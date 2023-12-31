@@ -6,7 +6,6 @@ class Screenshot
 {
 public:
 	Screenshot();
-	~Screenshot();
 	void fullscreen();
 
 	// Captures fullscreen than crops bitmap to dimensions and position of the active window.
@@ -17,10 +16,8 @@ public:
 	void client();
 
 private:
-	void save();
+	void save(HBITMAP compatible_bitmap);
 	std::wstring get_random_wstring(size_t lenght);
 	std::filesystem::path path{};
 	const wchar_t* format{};
-	HDC compatible_hdc{};
-	HBITMAP compatible_bitmap{};
 };
