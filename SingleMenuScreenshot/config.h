@@ -1,22 +1,12 @@
 #pragma once
 
 #include "pch.h"
+#include "helpers.h"
 
 enum SMSS_FORMAT_ : uint8_t
 {
 	SMSS_FORMAT_PNG,
 	SMSS_FORMAT_BMP
-};
-
-// Workaround for string literal as template-argument.
-template <size_t n>
-struct Char_array
-{
-	constexpr Char_array(const char(&str)[n]) :
-		val{ std::to_array(str) }
-	{}
-
-	const std::array<char, n> val;
 };
 
 template<typename T, Char_array str>
