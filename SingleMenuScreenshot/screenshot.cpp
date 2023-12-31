@@ -57,11 +57,11 @@ void Screenshot::window()
 
 	// Create dc that we can draw to.
 	auto compatible_hdc{ CreateCompatibleDC(hdc) };
-	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top) };
+	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, rc_w<int>(rect), rc_h<int>(rect))};
 
 	// Capture the image.
 	SelectObject(compatible_hdc, compatible_bitmap);
-	smss_assert(BitBlt(compatible_hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT), != 0);
+	smss_assert(BitBlt(compatible_hdc, 0, 0, rc_w<int>(rect), rc_h<int>(rect), hdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT), != 0);
 
 	smss_assert(ReleaseDC(nullptr, hdc), == 1);
 	save(compatible_bitmap);
@@ -80,11 +80,11 @@ void Screenshot::client()
 
 	// Create dc that we can draw to.
 	auto compatible_hdc{ CreateCompatibleDC(hdc) };
-	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top) };
+	auto compatible_bitmap{ CreateCompatibleBitmap(hdc, rc_w<int>(rect), rc_h<int>(rect)) };
 
 	// Capture the image.
 	SelectObject(compatible_hdc, compatible_bitmap);
-	smss_assert(BitBlt(compatible_hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hdc, 0, 0, SRCCOPY), != 0);
+	smss_assert(BitBlt(compatible_hdc, 0, 0, rc_w<int>(rect), rc_h<int>(rect), hdc, 0, 0, SRCCOPY), != 0);
 
 	smss_assert(ReleaseDC(hwnd, hdc), == 1);
 	save(compatible_bitmap);

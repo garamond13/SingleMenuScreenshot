@@ -55,3 +55,17 @@ struct Char_array
 
 	const std::array<char, n> val;
 };
+
+// Get width from RECT.
+template<typename T>
+constexpr T rc_w(const RECT& rect) noexcept
+{
+	return static_cast<T>(rect.right - rect.left);
+}
+
+// Get height from RECT.
+template<typename T>
+constexpr T rc_h(const RECT& rect) noexcept
+{
+	return static_cast<T>(rect.bottom - rect.top);
+}
