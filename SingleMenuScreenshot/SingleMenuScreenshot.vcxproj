@@ -148,7 +148,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
-    <ClInclude Include="config_pairs.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="pch.h" />

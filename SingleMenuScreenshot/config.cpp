@@ -1,29 +1,28 @@
 #include "pch.h"
 #include "config.h"
-#include "config_pairs.h"
 #include "helpers.h"
 
-/* config example
+/* Config example
 
-top_level_key=top_level_value
-top_level_key=top_level_value
-top_level_key=top_level_value
+top_level_key=value
+top_level_key=value
+top_level_key=value0,value1,value2
 #section
 ##subsection
-subsection_key=subsection_value
-subsection_key=subsection_value
-subsection_key=subsection_value
+subsection_key=value
+subsection_key=value
+subsection_key=value
 ##end
 ##subsection
-subsection_key=subsection_value
-subsection_key=subsection_value
-subsection_key=subsection_value
+subsection_key=value0,value1
+subsection_key=value
+subsection_key=value
 ##end
 #end
 #section
-section_key=section_value
-section_key=section_value
-section_key=section_value
+section_key=value
+section_key=value
+section_key=value
 #end
 
 */
@@ -50,14 +49,14 @@ void Config::set_autostart()
 {
 	const auto subkey{ L"Software\\Microsoft\\Windows\\CurrentVersion\\Run" };
 	const auto value{ L"SingleMenuScreenshot" };
-	if (SMSS_NAME_AUTOSTART_VAL) {
+	if (autostart.val) {
 		smss_assert(RegDeleteKeyValueW(HKEY_CURRENT_USER, subkey, value), == ERROR_SUCCESS);
-		autostart = false;
+		autostart.val = false;
 	}
 	else {
 
-		//note that it takes the current path
-		//if the program changes the path it wont autostart from the new path, but the config will be still set to autostart
+		// Note that it takes the current path.
+		// If the program changes the path it wont autostart from the new path, but the config will be still set to autostart.
 		wchar_t path[MAX_PATH];
 		GetModuleFileNameW(nullptr, path, MAX_PATH);
 
@@ -65,14 +64,14 @@ void Config::set_autostart()
 		smss_assert(RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_ALL_ACCESS, &hkey), == ERROR_SUCCESS);
 		smss_assert(RegSetValueExW(hkey, value, 0, REG_SZ, reinterpret_cast<BYTE*>(path), sizeof(path)), == ERROR_SUCCESS);
 		smss_assert(RegCloseKey(hkey), == ERROR_SUCCESS);
-		autostart = true;
+		autostart.val = true;
 	}
 	write();
 }
 
 void Config::set_format(SMSS_FORMAT_ format)
 {
-	this->format = format;
+	this->format.val = format;
 	write();
 }
 
@@ -84,8 +83,8 @@ void Config::set_directory()
 		DWORD options;
 		smss_assert(file_dialog->GetOptions(&options), == S_OK);
 
-		//set options to allow us to pick a directory
-		//show the dialog
+		// Set options to allow us to pick a directory.
+		// Show the dialog.
 		smss_assert(file_dialog->SetOptions(options | FOS_PICKFOLDERS), == S_OK);
 
 		if (file_dialog->Show(nullptr) == S_OK) {
@@ -95,7 +94,7 @@ void Config::set_directory()
 			if (file_dialog->GetResult(shell_item.ReleaseAndGetAddressOf()) == S_OK) {
 				LPWSTR path;
 				if (shell_item->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &path) == S_OK) {
-					directory = path;
+					directory.val = path;
 					write();
 				}
 				CoTaskMemFree(path);
@@ -113,34 +112,34 @@ void Config::write()
 
 void Config::set_defaults() noexcept
 {
-	SMSS_NAME_FORMAT_VAL = SMSS_FORMAT_PNG;
-	SMSS_NAME_AUTOSTART_VAL = false;
-	directory = get_desktop();
+	format.val = SMSS_FORMAT_PNG;
+	autostart.val = false;
+	directory.val = get_desktop();
 }
 
 void Config::read_top_level(const std::string& key, const std::string& val)
 {
-	if (key == SMSS_NAME_FORMAT_KEY) {
-		strtoval(val, SMSS_NAME_FORMAT_VAL);
+	if (key == format.key) {
+		strtoval(val, format.val);
 		return;
 	}
-	if (key == SMSS_NAME_AUTOSTART_KEY) {
-		strtoval(val, SMSS_NAME_AUTOSTART_VAL);
+	if (key == autostart.key) {
+		strtoval(val, autostart.val);
 		return;
 	}
-	if (key == SMSS_NAME_DIRECTORY_KEY) {
-		SMSS_NAME_DIRECTORY_VAL = val;
+	if (key == directory.key) {
+		directory.val = val;
 		return;
 	}
 }
 
 void Config::write_top_level(std::ofstream& file) const
 {
-	//have to cast to prevent writing char as "char" instead of number
-	file << SMSS_NAME_FORMAT_KEY << '=' << static_cast<uint16_t>(SMSS_NAME_FORMAT_VAL) << '\n';
+	// Have to cast to prevent writing as "char" instead of number.
+	file << format.key << '=' << static_cast<int>(format.val) << '\n';
 
-	file << SMSS_NAME_AUTOSTART_KEY << '=' << SMSS_NAME_AUTOSTART_VAL << '\n';
-	file << SMSS_NAME_DIRECTORY_KEY << '=' << SMSS_NAME_DIRECTORY_VAL.string() << '\n';
+	file << autostart.key << '=' << autostart.val << '\n';
+	file << directory.key << '=' << directory.val.string() << '\n';
 }
 
 std::filesystem::path Config::get_desktop() const noexcept

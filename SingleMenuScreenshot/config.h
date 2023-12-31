@@ -1,28 +1,41 @@
 #pragma once
 
 #include "pch.h"
-#include "config_pairs.h"
 
-enum SMSS_FORMAT_
+enum SMSS_FORMAT_ : uint8_t
 {
 	SMSS_FORMAT_PNG,
 	SMSS_FORMAT_BMP
 };
 
+// Workaround for string literal as template-argument.
+template <size_t n>
+struct Char_array
+{
+	constexpr Char_array(const char(&str)[n]) :
+		val{ std::to_array(str) }
+	{}
+
+	const std::array<char, n> val;
+};
+
+template<typename T, Char_array str>
+struct Config_pair
+{
+	T val;
+	static constexpr const char* key{ str.val.data() };
+};
+
 class Config
 {
-	using flag_type = uint8_t;
 public:
 	void read();
 	void set_autostart();
 	void set_directory();
 	void set_format(SMSS_FORMAT_ format);
-	flag_type SMSS_NAME_FORMAT_VAL;
-	bool SMSS_NAME_AUTOSTART_VAL;
-
-	//the directory in which screenshots will be saved
-	std::filesystem::path directory;
-
+	Config_pair<uint8_t, "fmt"> format;
+	Config_pair<bool, "astrt"> autostart;
+	Config_pair< std::filesystem::path, "dir"> directory; // The directory in which screenshots will be saved.
 private:
 	void write();
 	void set_defaults() noexcept;

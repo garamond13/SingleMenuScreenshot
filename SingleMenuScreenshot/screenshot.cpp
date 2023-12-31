@@ -5,14 +5,14 @@
 
 Screenshot::Screenshot()
 {
-	path = g_config.directory;
+	path = g_config.directory.val;
 	const std::chrono::zoned_time time(std::chrono::current_zone(), std::chrono::system_clock::now());
 	path /= std::format(L"{:%Y-%m-%d %H_%M }", time) + get_random_wstring(5);
-	if (g_config.format == SMSS_FORMAT_PNG) {
+	if (g_config.format.val == SMSS_FORMAT_PNG) {
 		path.replace_extension(L".png");
 		format = L"image/png";
 	}
-	else if (g_config.format == SMSS_FORMAT_BMP) {
+	else if (g_config.format.val == SMSS_FORMAT_BMP) {
 		path.replace_extension(L".bmp");
 		format = L"image/bmp";
 	}

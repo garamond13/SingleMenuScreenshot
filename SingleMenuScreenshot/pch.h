@@ -25,3 +25,4 @@
 #include <random>
 #include <cassert>
 #include <memory>
+#include <array>

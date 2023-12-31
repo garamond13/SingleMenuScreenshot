@@ -148,11 +148,11 @@ void Window::show_menu(const POINT& point) const noexcept
 	const auto sub_menu{ GetSubMenu(hmenu, 0) };
 
 	// Set check marks on menu items.
-	if (g_config.format == SMSS_FORMAT_PNG)
+	if (g_config.format.val == SMSS_FORMAT_PNG)
 		CheckMenuItem(sub_menu, ID_FORMAT_PNG, MF_CHECKED);
-	if (g_config.format == SMSS_FORMAT_BMP)
+	if (g_config.format.val == SMSS_FORMAT_BMP)
 		CheckMenuItem(sub_menu, ID_FORMAT_BMP, MF_CHECKED);
-	if (g_config.autostart)
+	if (g_config.autostart.val)
 		CheckMenuItem(sub_menu, ID_AUTOSTART, MF_CHECKED);
 
 	// Window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away.
