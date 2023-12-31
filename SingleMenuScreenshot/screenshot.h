@@ -9,11 +9,11 @@ public:
 	~Screenshot();
 	void fullscreen();
 
-	//captures fullscreen than crops bitmap to dimensions and position of the active window
+	// Captures fullscreen than crops bitmap to dimensions and position of the active window.
 	void window();
 
-	//captures only the client area of the currently active window
-	//sometimes it can give black image with correct dimensions, at the same time window function gives same dimesions and normal image
+	// Captures only the client area of the currently active window.
+	// Sometimes it can give black image with correct dimensions, at the same time window function gives same dimesions and normal image.
 	void client();
 
 private:
