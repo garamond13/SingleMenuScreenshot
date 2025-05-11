@@ -152,7 +152,7 @@ void Window::show_menu(const POINT& point) const noexcept
 		CheckMenuItem(sub_menu, ID_FORMAT_PNG, MF_CHECKED);
 	if (g_config.format.val == SMSS_FORMAT_BMP)
 		CheckMenuItem(sub_menu, ID_FORMAT_BMP, MF_CHECKED);
-	if (g_config.autostart.val)
+	if (g_config.get_autostart())
 		CheckMenuItem(sub_menu, ID_AUTOSTART, MF_CHECKED);
 
 	// Window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away.

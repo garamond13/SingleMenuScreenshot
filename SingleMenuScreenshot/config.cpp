@@ -27,6 +27,12 @@ section_key=value
 
 */
 
+namespace
+{
+	constexpr auto SMSS_REG_SUBKEY = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+	constexpr auto SMSS_REG_VALUE = L"SingleMenuScreenshot";
+}
+
 void Config::read()
 {
 	std::ifstream file(get_path());
@@ -47,26 +53,37 @@ void Config::read()
 
 void Config::set_autostart()
 {
-	const auto subkey{ L"Software\\Microsoft\\Windows\\CurrentVersion\\Run" };
-	const auto value{ L"SingleMenuScreenshot" };
-	if (autostart.val) {
-		smss_assert(RegDeleteKeyValueW(HKEY_CURRENT_USER, subkey, value), == ERROR_SUCCESS);
-		autostart.val = false;
+	if (get_autostart()) {
+		smss_assert(RegDeleteKeyValueW(HKEY_CURRENT_USER, SMSS_REG_SUBKEY, SMSS_REG_VALUE), == ERROR_SUCCESS);
 	}
 	else {
-
-		// Note that it takes the current path.
-		// If the program changes the path it wont autostart from the new path, but the config will be still set to autostart.
-		wchar_t path[MAX_PATH];
-		GetModuleFileNameW(nullptr, path, MAX_PATH);
-
 		HKEY hkey;
-		smss_assert(RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_ALL_ACCESS, &hkey), == ERROR_SUCCESS);
-		smss_assert(RegSetValueExW(hkey, value, 0, REG_SZ, reinterpret_cast<BYTE*>(path), sizeof(path)), == ERROR_SUCCESS);
-		smss_assert(RegCloseKey(hkey), == ERROR_SUCCESS);
-		autostart.val = true;
+		if (RegOpenKeyExW(HKEY_CURRENT_USER, SMSS_REG_SUBKEY, 0, KEY_ALL_ACCESS, &hkey) == ERROR_SUCCESS) {
+			wchar_t path[MAX_PATH];
+			GetModuleFileNameW(nullptr, path, MAX_PATH);
+			if (RegSetValueExW(hkey, SMSS_REG_VALUE, 0, REG_SZ, reinterpret_cast<BYTE*>(path), sizeof(path)) == ERROR_SUCCESS) {
+				smss_assert(RegCloseKey(hkey), == ERROR_SUCCESS);
+			}
+		}
 	}
-	write();
+}
+
+bool Config::get_autostart()
+{	
+	// First get required buffer size.
+	DWORD buffer_size = 0;
+	if (RegGetValueW(HKEY_CURRENT_USER, SMSS_REG_SUBKEY, SMSS_REG_VALUE, RRF_RT_REG_SZ, NULL, NULL, &buffer_size) == ERROR_SUCCESS) {
+		
+		auto data = std::make_unique<wchar_t[]>(buffer_size);
+		if (RegGetValueW(HKEY_CURRENT_USER, SMSS_REG_SUBKEY, SMSS_REG_VALUE, RRF_RT_REG_SZ, NULL, data.get(), &buffer_size) == ERROR_SUCCESS) {
+			wchar_t path[MAX_PATH];
+			GetModuleFileNameW(nullptr, path, MAX_PATH);
+			if (!wcscmp(data.get(), path)) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 void Config::set_format(SMSS_FORMAT_ format)
@@ -113,7 +130,6 @@ void Config::write()
 void Config::set_defaults() noexcept
 {
 	format.val = SMSS_FORMAT_PNG;
-	autostart.val = false;
 	directory.val = get_desktop();
 }
 
@@ -121,10 +137,6 @@ void Config::read_top_level(const std::string& key, const std::string& val)
 {
 	if (key == format.key) {
 		strtoval(val, format.val);
-		return;
-	}
-	if (key == autostart.key) {
-		strtoval(val, autostart.val);
 		return;
 	}
 	if (key == directory.key) {
@@ -138,7 +150,6 @@ void Config::write_top_level(std::ofstream& file) const
 	// Have to cast to prevent writing as "char" instead of number.
 	file << format.key << '=' << static_cast<int>(format.val) << '\n';
 
-	file << autostart.key << '=' << autostart.val << '\n';
 	file << directory.key << '=' << directory.val.string() << '\n';
 }
 

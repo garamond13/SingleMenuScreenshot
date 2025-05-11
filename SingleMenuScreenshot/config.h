@@ -21,10 +21,10 @@ class Config
 public:
 	void read();
 	void set_autostart();
+	bool get_autostart();
 	void set_directory();
 	void set_format(SMSS_FORMAT_ format);
 	Config_pair<uint8_t, "fmt"> format;
-	Config_pair<bool, "astrt"> autostart;
 	Config_pair< std::filesystem::path, "dir"> directory; // The directory in which screenshots will be saved.
 private:
 	void write();
